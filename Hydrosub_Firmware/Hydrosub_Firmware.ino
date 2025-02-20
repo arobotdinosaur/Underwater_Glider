@@ -4,7 +4,8 @@
 #include <Adafruit_Simple_AHRS.h>
 #include <Servo.h>
 #include <QuadClass_LSM6DSOX.h> //I am reusing a bunch of code from a quadcopter project I did to read IMU data
-Servo thruster;
+Servo thrusterLeft;
+Servo thrusterRight;
 
   float pitch=0.0; 
   float pitch_rate = 0.0;
@@ -46,15 +47,46 @@ void setupSensor()
 #
 }
 
+// Code to receive keyboard input
+char receivedChar;
+void recvOneChar() {
+  if (Serial.available() > 0) {
+      receivedChar = Serial.read();
+  }
+}
+void interpretKey(char key) {
+  if (key == 'w') {
+    thrusterLeft.writeMicroseconds(1550);
+    //thrusterRight.writeMicroseconds(1550);
+  } else if (key == 'a') {
+    thrusterLeft.writeMicroseconds(1450);
+    //thrusterRight.writeMicroseconds(1550);
+  } else if (key == 's') {
+    thrusterLeft.writeMicroseconds(1450);
+    //thrusterRight.writeMicroseconds(1450);
+  } else if (key == 'd') {
+    thrusterLeft.writeMicroseconds(1550);
+    //thrusterRight.writeMicroseconds(1450);
+  } else {
+    thrusterLeft.writeMicroseconds(1500);
+    //thrusterRight.writeMicroseconds(1500);
+  }
+}
+
+
 void setup() {
 Serial.begin(9600);
 
 setupSensor();
 
-thruster.attach(9); //pin d9 on arduino
+thrusterLeft.attach(9); //pin d9 on arduino
+// thrusterRight.attach() idk which pin yet
 
-thruster.writeMicroseconds(1500);  // Neutral position (motor stopped), needed for esc initialization
+thrusterLeft.writeMicroseconds(1500);  // Neutral position (motor stopped), needed for esc initialization
 //1000 is full backwards, 1500 is stopped, 2000 is full forwards
+
+//thrusterRight.writeMicroseconds(1500);
+
 delay(2000);
 }
 unsigned long  last = millis();
@@ -120,16 +152,19 @@ if (ahrs->getQuadOrientation(&orientation))
 
   }
   // put your main code here, to run repeatedly:
-if(cf_roll>50)
+/* if(cf_roll>50)
 {
-thruster.writeMicroseconds(1550);//esc struggles with lower throttle
+thrusterLeft.writeMicroseconds(1550);//esc struggles with lower throttle
 }
 else{
-  thruster.writeMicroseconds(1500);
-}
+  thrusterLeft.writeMicroseconds(1500);
+} */
+
+recvOneChar();
+interpretKey(receivedChar);
 
   last = now;
-}
+} 
 
 
 
