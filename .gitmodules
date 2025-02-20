@@ -1,0 +1,3 @@
+[submodule "libraries/QuadClass-Atmega128RFA-Arduino-Addon"]
+	path = libraries/QuadClass-Atmega128RFA-Arduino-Addon
+	url = https://github.com/NVSL/QuadClass-Atmega128RFA-Arduino-Addon
