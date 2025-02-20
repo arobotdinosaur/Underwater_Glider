@@ -1,3 +1,18 @@
 [submodule "libraries/QuadClass-Atmega128RFA-Arduino-Addon"]
 	path = libraries/QuadClass-Atmega128RFA-Arduino-Addon
 	url = https://github.com/NVSL/QuadClass-Atmega128RFA-Arduino-Addon
+[submodule "QuadClass-LSM6DSOX"]
+	path = QuadClass-LSM6DSOX
+	url = https://github.com/NVSL/QuadClass-LSM6DSOX.git
+[submodule "libraries/QuadClass-LSM6DSOX"]
+	path = libraries/QuadClass-LSM6DSOX
+	url = https://github.com/NVSL/QuadClass-LSM6DSOX.git
+[submodule "QuadClass-Sensor"]
+	path = QuadClass-Sensor
+	url = https://github.com/NVSL/QuadClass_Sensor.git
+[submodule "libraries/QuadClass-Sensor"]
+	path = libraries/QuadClass-Sensor
+	url = https://github.com/NVSL/QuadClass_Sensor.git
+[submodule "libraries/QuadClass_AHRS"]
+	path = libraries/QuadClass_AHRS
+	url = https://github.com/NVSL/QuadClass_AHRS.git
