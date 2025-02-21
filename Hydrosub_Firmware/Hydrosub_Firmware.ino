@@ -6,6 +6,8 @@
 #include <QuadClass_LSM6DSOX.h> //I am reusing a bunch of code from a quadcopter project I did to read IMU data
 Servo thrusterLeft;
 Servo thrusterRight;
+Servo thrustertopLeft;
+Servo thrustertopRight;
 
   float pitch=0.0; 
   float pitch_rate = 0.0;
@@ -52,6 +54,7 @@ char receivedChar;
 void recvOneChar() {
   if (Serial.available() > 0) {
       receivedChar = Serial.read();
+      Serial.println(receivedChar);
   }
 }
 void interpretKey(char key) {
@@ -59,17 +62,19 @@ void interpretKey(char key) {
     thrusterLeft.writeMicroseconds(1550);
     //thrusterRight.writeMicroseconds(1550);
   } else if (key == 'a') {
-    thrusterLeft.writeMicroseconds(1450);
+    thrusterLeft.writeMicroseconds(1550);
     //thrusterRight.writeMicroseconds(1550);
   } else if (key == 's') {
-    thrusterLeft.writeMicroseconds(1450);
+    thrustertopRight.writeMicroseconds(1550);
     //thrusterRight.writeMicroseconds(1450);
   } else if (key == 'd') {
-    thrusterLeft.writeMicroseconds(1550);
+    thrustertopLeft.writeMicroseconds(1550);
     //thrusterRight.writeMicroseconds(1450);
-  } else {
+  } else if (key == 'q') {
     thrusterLeft.writeMicroseconds(1500);
-    //thrusterRight.writeMicroseconds(1500);
+    thrusterRight.writeMicroseconds(1500);
+    thrustertopRight.writeMicroseconds(1500);
+    thrustertopLeft.writeMicroseconds(1500);
   }
 }
 
@@ -79,8 +84,10 @@ Serial.begin(9600);
 
 setupSensor();
 
-thrusterLeft.attach(9); //pin d9 on arduino
-// thrusterRight.attach() idk which pin yet
+thrusterLeft.attach(2); //pin d2
+thrusterRight.attach(3);
+thrustertopLeft.attach(4);
+thrustertopRight.attach(5);
 
 thrusterLeft.writeMicroseconds(1500);  // Neutral position (motor stopped), needed for esc initialization
 //1000 is full backwards, 1500 is stopped, 2000 is full forwards
@@ -151,17 +158,21 @@ if (ahrs->getQuadOrientation(&orientation))
 
 
   }
-  // put your main code here, to run repeatedly:
-/* if(cf_roll>50)
+/*
+ if(cf_roll>50)
 {
 thrusterLeft.writeMicroseconds(1550);//esc struggles with lower throttle
 }
+ if(cf_roll<-50){
+  thrusterRight.writeMicroseconds(1550);
+}
 else{
   thrusterLeft.writeMicroseconds(1500);
-} */
-
-recvOneChar();
-interpretKey(receivedChar);
+  thrusterRight.writeMicroseconds(1500);
+} 
+*/
+//recvOneChar();
+//interpretKey(receivedChar);
 
   last = now;
 } 
