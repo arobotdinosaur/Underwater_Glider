@@ -31,6 +31,15 @@ Servo thrustertopRight;
   double roll_corrected = 0.0;
   double gyro_angle_yaw = 0.0;
 
+  int motorRight = 1500;
+  int motorLeft = 1500;
+  int topRight = 1500;
+  int topLeft = 1500;
+
+  int throttle = 0;
+  int pitch= 0;
+  int yaw = 0;
+
 void setupSensor()
 {
 
@@ -62,20 +71,31 @@ void interpretKey(char key) {
     thrusterLeft.writeMicroseconds(1550);
     //thrusterRight.writeMicroseconds(1550);
   } else if (key == 'a') {
-    thrusterLeft.writeMicroseconds(1550);
-    //thrusterRight.writeMicroseconds(1550);
+    thrusterRight.writeMicroseconds(1550);
   } else if (key == 's') {
-    thrustertopRight.writeMicroseconds(1550);
-    //thrusterRight.writeMicroseconds(1450);
+    //thrustertopRight.writeMicroseconds(1550);
+    thrusterRight.writeMicroseconds(1450);
   } else if (key == 'd') {
-    thrustertopLeft.writeMicroseconds(1550);
-    //thrusterRight.writeMicroseconds(1450);
+    //thrustertopLeft.writeMicroseconds(1550);
+    thrusterLeft.writeMicroseconds(1450);
   } else if (key == 'q') {
     thrusterLeft.writeMicroseconds(1500);
     thrusterRight.writeMicroseconds(1500);
     thrustertopRight.writeMicroseconds(1500);
     thrustertopLeft.writeMicroseconds(1500);
   }
+}
+
+void desiredPos(char key){
+  if (key=='e');{
+  thrust=thrust+1;}
+  else if (key=='w');{
+  thrust = thrust-1;}
+  else if (key=='q'){
+    thrust = 0;
+  }
+  if (key=='')
+
 }
 
 
@@ -91,8 +111,7 @@ thrustertopRight.attach(5);
 
 thrusterLeft.writeMicroseconds(1500);  // Neutral position (motor stopped), needed for esc initialization
 //1000 is full backwards, 1500 is stopped, 2000 is full forwards
-
-//thrusterRight.writeMicroseconds(1500);
+thrusterRight.writeMicroseconds(1500);
 
 delay(2000);
 }
@@ -161,18 +180,18 @@ if (ahrs->getQuadOrientation(&orientation))
 /*
  if(cf_roll>50)
 {
-thrusterLeft.writeMicroseconds(1550);//esc struggles with lower throttle
+thrusterLeft.writeMicroseconds(1600);//esc struggles with lower throttle
 }
- if(cf_roll<-50){
-  thrusterRight.writeMicroseconds(1550);
+else if(cf_roll<=-50){
+  thrusterRight.writeMicroseconds(1600);
 }
 else{
   thrusterLeft.writeMicroseconds(1500);
   thrusterRight.writeMicroseconds(1500);
 } 
 */
-//recvOneChar();
-//interpretKey(receivedChar);
+recvOneChar();
+interpretKey(receivedChar);
 
   last = now;
 } 
