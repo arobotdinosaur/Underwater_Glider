@@ -14,6 +14,7 @@ Servo thrusterTopRight;
   float roll=0.0;
   float yaw = 0.0;
   float target_yaw = 0.0;
+
   QuadClass_LSM6DSOX lsm = QuadClass_LSM6DSOX();
   Adafruit_Simple_AHRS *ahrs = NULL;
   Adafruit_Sensor *_accel = NULL;
@@ -27,6 +28,8 @@ Servo thrusterTopRight;
   double cf_roll = 0.0;
   double pitch_offset = 0.0;//1.88+0.51;
   double roll_offset = 0.0; 
+  double yaw_offset = 0.0;
+  double yaw_corrected = 0.0;
   double pitch_corrected = 0.0; 
   double roll_corrected = 0.0;
   double gyro_angle_yaw = 0.0;
@@ -77,7 +80,7 @@ char receivedChar;
 void recvOneChar() {
   if (Serial.available() > 0) {
       receivedChar = Serial.read();
-      Serial.println(receivedChar);
+      //Serial.println(receivedChar);
       desiredPos(receivedChar);
   }
 }
@@ -128,6 +131,12 @@ void desiredPos(char key){
   }
   if (key == 'j'){
     desiredyaw=0;
+  }
+  if (key == 'i') {
+      pitch_offset=-cf_pitch;
+  }
+  if (key == 'o') {
+    yaw_offset=-gyro_raw_yaw;
   }
 }
 
@@ -229,15 +238,16 @@ PID();
 
 
 void PID(){
+  pitch_corrected=cf_pitch+pitch_offset;
+  yaw_corrected=gyro_raw_yaw+yaw_offset;
 
+  float pitcherror = desiredpitch - pitch_corrected;
+  float yawerror = desiredyaw-yaw_corrected;
 
-  float yawerror = desiredyaw-gyro_raw_yaw;
-  float pitcherror = desiredpitch - cf_pitch;
-
-  integralpitch=integralpitch+pitcherror*dt;
+  integralpitch=integralpitch+pitcherror*dt*0.001;
   derivativepitch=(pitcherror-oldpitcherror)/dt;
 
-  pitchcontrol=Kp*cf_pitch+Ki*integralpitch+Kd*derivativepitch;
+  pitchcontrol=Kp*pitcherror+Ki*integralpitch+Kd*derivativepitch;
 
   oldpitcherror=pitcherror;
   motorcontrol();
@@ -252,6 +262,7 @@ void motorcontrol(){
   //motorRight=thrustmotor;
   Serial.print('pitchcontorl: ');
   Serial.println(pitchcontrol);
+  pitchcontrol=constrain(pitchcontrol,-10,10);
   pitchcontrol=map(pitchcontrol,-10,10,-250,250);
   motorRight=thrustmotor+pitchcontrol+yawcontrol;
   //motorLeft=thrustmotor+pitchcontrol-yawcontrol;
