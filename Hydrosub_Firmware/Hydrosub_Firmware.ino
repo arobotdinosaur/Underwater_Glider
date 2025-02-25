@@ -6,8 +6,8 @@
 #include <QuadClass_LSM6DSOX.h> //I am reusing a bunch of code from a quadcopter project I did to read IMU data
 Servo thrusterLeft;
 Servo thrusterRight;
-Servo thrustertopLeft;
-Servo thrustertopRight;
+Servo thrusterTopLeft;
+Servo thrusterTopRight;
 
   float pitch=0.0; 
   float pitch_rate = 0.0;
@@ -30,15 +30,29 @@ Servo thrustertopRight;
   double pitch_corrected = 0.0; 
   double roll_corrected = 0.0;
   double gyro_angle_yaw = 0.0;
+  double gyro_raw_yaw = 0.0;
 
   int motorRight = 1500;
   int motorLeft = 1500;
   int topRight = 1500;
   int topLeft = 1500;
 
-  int throttle = 0;
-  int pitch= 0;
-  int yaw = 0;
+  int16_t thrust = 0;
+  int16_t thrustmotor=0;
+  float desiredpitch= 0;
+  float desiredyaw = 0;
+
+  float oldpitcherror=0;
+  float pitcherror=0;
+  float integralpitch=0;
+  float derivativepitch=0;
+  float pitchcontrol=0;
+  float yawcontrol=0;
+  float Kp=1;
+  float Ki=0.1;
+  float Kd=0.02;
+  
+  float dt=0.0;
 
 void setupSensor()
 {
@@ -64,6 +78,7 @@ void recvOneChar() {
   if (Serial.available() > 0) {
       receivedChar = Serial.read();
       Serial.println(receivedChar);
+      desiredPos(receivedChar);
   }
 }
 void interpretKey(char key) {
@@ -73,45 +88,66 @@ void interpretKey(char key) {
   } else if (key == 'a') {
     thrusterRight.writeMicroseconds(1550);
   } else if (key == 's') {
-    //thrustertopRight.writeMicroseconds(1550);
+    //thrusterTopRight.writeMicroseconds(1550);
     thrusterRight.writeMicroseconds(1450);
   } else if (key == 'd') {
-    //thrustertopLeft.writeMicroseconds(1550);
+    //thrusterTopLeft.writeMicroseconds(1550);
     thrusterLeft.writeMicroseconds(1450);
   } else if (key == 'q') {
     thrusterLeft.writeMicroseconds(1500);
     thrusterRight.writeMicroseconds(1500);
-    thrustertopRight.writeMicroseconds(1500);
-    thrustertopLeft.writeMicroseconds(1500);
+    thrusterTopRight.writeMicroseconds(1500);
+    thrusterTopLeft.writeMicroseconds(1500);
   }
 }
 
 void desiredPos(char key){
-  if (key=='e');{
-  thrust=thrust+1;}
-  else if (key=='w');{
-  thrust = thrust-1;}
-  else if (key=='q'){
+  if (key=='e'){
+  thrust=thrust+1;
+  //digitalWrite(LED_BUILTIN, HIGH);
+  } 
+  if (key=='w'){
+  thrust = thrust-1;
+  //digitalWrite(LED_BUILTIN, HIGH);
+  }
+  if (key=='q'){
     thrust = 0;
   }
-  if (key=='')
-
+  if (key=='d'){
+  desiredpitch=desiredpitch+1;}
+  if (key=='s'){
+    desiredpitch=desiredpitch-1;
+  }
+  if (key=='a'){
+  desiredpitch=0;}
+  if (key=='l'){
+    desiredyaw=desiredyaw+1;
+  }
+  if (key == 'k') {
+    desiredyaw=desiredyaw-1;
+  }
+  if (key == 'j'){
+    desiredyaw=0;
+  }
 }
 
 
 void setup() {
 Serial.begin(9600);
+pinMode(LED_BUILTIN, OUTPUT);
 
 setupSensor();
 
 thrusterLeft.attach(2); //pin d2
 thrusterRight.attach(3);
-thrustertopLeft.attach(4);
-thrustertopRight.attach(5);
+thrusterTopLeft.attach(4);
+thrusterTopRight.attach(5);
 
 thrusterLeft.writeMicroseconds(1500);  // Neutral position (motor stopped), needed for esc initialization
 //1000 is full backwards, 1500 is stopped, 2000 is full forwards
 thrusterRight.writeMicroseconds(1500);
+thrusterTopLeft.writeMicroseconds(1500);
+thrusterTopRight.writeMicroseconds(1500);
 
 delay(2000);
 }
@@ -119,15 +155,15 @@ unsigned long  last = millis();
 void loop() {
   quad_data_t orientation;
   unsigned long  now = millis();
-  float dt = (now - last);
+  dt = (now - last);
 
 if (ahrs->getQuadOrientation(&orientation))
   {
     /* 'orientation' should have valid .roll and .pitch fields */
     //Serial.print(now - last);
     pitch = orientation.pitch;
-   Serial.print("rawpitch:");
-   Serial.println(pitch);
+   //("rawpitch:");
+   //Serial.println(pitch);
 
     pitch_rate = orientation.pitch_rate;
     //Serial.print(" raw_pitch_rate:");
@@ -148,15 +184,7 @@ if (ahrs->getQuadOrientation(&orientation))
     lsm.setAccelCompositeFilter(LSM6DS_CompositeFilter_LPF2, LSM6DS_CompositeFilter_ODR_DIV_800);
     double gyro_raw_pitch = gyro_event.gyro.y; //.z was there initially, may need pid change
     double gyro_raw_roll = gyro_event.gyro.x;
-    double gyro_raw_yaw = gyro_event.gyro.z;
-
-  //Serial.print("\t\tAccel X: ");
-  //Serial.print(accel.acceleration.x);
-  //Serial.print(" \tY: ");
-  //Serial.println(accel.acceleration.y);
-
-   Serial.print("gyro_raw_pitch:");
-   Serial.println(gyro_raw_pitch*RAD_TO_DEG);
+    gyro_raw_yaw = gyro_event.gyro.z;
 
     
     double gyro_angle_pitch = cf_pitch + (gyro_raw_pitch * RAD_TO_DEG)*dt*0.001;
@@ -166,6 +194,8 @@ if (ahrs->getQuadOrientation(&orientation))
     cf_pitch = (gain * gyro_angle_pitch) + (1.0-gain)*pitch;
     cf_roll = (gain * gyro_angle_roll) + (1.0-gain)*roll;
 
+
+/*
     Serial.print("cf_pitch:");
     Serial.println(cf_pitch);
 
@@ -174,8 +204,7 @@ if (ahrs->getQuadOrientation(&orientation))
 
     Serial.print("gyro_angle_yaw:");
     Serial.println(gyro_angle_yaw);
-
-
+*/
   }
 /*
  if(cf_roll>50)
@@ -190,11 +219,52 @@ else{
   thrusterRight.writeMicroseconds(1500);
 } 
 */
+
 recvOneChar();
-interpretKey(receivedChar);
+PID();
+//interpretKey(receivedChar);
 
   last = now;
 } 
 
 
+void PID(){
 
+
+  float yawerror = desiredyaw-gyro_raw_yaw;
+  float pitcherror = desiredpitch - cf_pitch;
+
+  integralpitch=integralpitch+pitcherror*dt;
+  derivativepitch=(pitcherror-oldpitcherror)/dt;
+
+  pitchcontrol=Kp*cf_pitch+Ki*integralpitch+Kd*derivativepitch;
+
+  oldpitcherror=pitcherror;
+  motorcontrol();
+}
+
+
+void motorcontrol(){
+  //Serial.print("thrust: ");
+  //Serial.println(thrust);
+  thrustmotor=constrain(thrust,-15,15);
+  thrustmotor=map(thrust,-15,15,1200,1800);
+  //motorRight=thrustmotor;
+  Serial.print('pitchcontorl: ');
+  Serial.println(pitchcontrol);
+  pitchcontrol=map(pitchcontrol,-10,10,-250,250);
+  motorRight=thrustmotor+pitchcontrol+yawcontrol;
+  //motorLeft=thrustmotor+pitchcontrol-yawcontrol;
+  //topRight=thrustmotor-pitchcontrol+yawcontrol;
+  //topLeft=thrustmotor-pitchcontrol-yawcontrol;
+  motorRight=constrain(motorRight,1200,1800);
+  motorLeft=constrain(motorLeft,1200,1800);
+  topRight=constrain(topRight,1200,1800);
+  topLeft=constrain(topLeft,1200,1800);
+  //thrusterRight.writeMicroseconds(motorRight);
+  //thrusterLeft.writeMicroseconds(motorLeft);
+  //thrusterTopRight.writeMicroseconds(topRight);
+  //thrusterTopLeft.writeMicroseconds(topLeft);
+  Serial.print("rightThrust: ");
+  Serial.println(motorRight);
+}
