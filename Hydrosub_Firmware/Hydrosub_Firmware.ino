@@ -55,9 +55,12 @@ Servo thrusterTopRight;
   float derivativepitch=0;
   float pitchcontrol=0;
   float yawcontrol=0;
-  float Kp=1;
-  float Ki=0.1;
+  float Kp=0.2;
+  float Ki=0.02;
   float Kd=0.02;
+  float Yp=0.1;
+  float Yi=0.01;
+  float Yd=0.02;
   
   float dt=0.0;
 
@@ -257,7 +260,7 @@ void PID(){
   derivativeyaw=(yawerror-oldyawerror)/dt;
 
   pitchcontrol=Kp*pitcherror+Ki*integralpitch+Kd*derivativepitch;
-  yawcontrol=Kp*yawerror+Ki*integralyaw+Kd*derivativeyaw;
+  yawcontrol=Yp*yawerror+Yi*integralyaw+Yd*derivativeyaw;
   
   oldpitcherror=pitcherror;
   oldyawerror=yawerror;
@@ -273,20 +276,25 @@ void motorcontrol(){
   //motorRight=thrustmotor;
   Serial.print('pitchcontorl: ');
   Serial.println(pitchcontrol);
+  
   pitchcontrol=constrain(pitchcontrol,-10,10);
   pitchcontrol=map(pitchcontrol,-10,10,-250,250);
+  yawcontrol=constrain(yawcontrol,-10,10);
+  yawcontrol=map(yawcontrol,-10,10,-250,250);
+
+
   motorRight=thrustmotor+pitchcontrol+yawcontrol;
-  //motorLeft=thrustmotor+pitchcontrol-yawcontrol;
-  //topRight=thrustmotor-pitchcontrol+yawcontrol;
-  //topLeft=thrustmotor-pitchcontrol-yawcontrol;
+  motorLeft=thrustmotor+pitchcontrol-yawcontrol;
+  topRight=thrustmotor-pitchcontrol+yawcontrol;
+  topLeft=thrustmotor-pitchcontrol-yawcontrol;
   motorRight=constrain(motorRight,1200,1800);
   motorLeft=constrain(motorLeft,1200,1800);
   topRight=constrain(topRight,1200,1800);
   topLeft=constrain(topLeft,1200,1800);
-  //thrusterRight.writeMicroseconds(motorRight);
-  //thrusterLeft.writeMicroseconds(motorLeft);
-  //thrusterTopRight.writeMicroseconds(topRight);
-  //thrusterTopLeft.writeMicroseconds(topLeft);
+  thrusterRight.writeMicroseconds(motorRight);
+  thrusterLeft.writeMicroseconds(motorLeft);
+  thrusterTopRight.writeMicroseconds(topRight);
+  thrusterTopLeft.writeMicroseconds(topLeft);
   Serial.print("rightThrust: ");
   Serial.println(motorRight);
 }
