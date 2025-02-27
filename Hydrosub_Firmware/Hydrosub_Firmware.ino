@@ -14,6 +14,10 @@ Servo thrusterTopRight;
   float roll=0.0;
   float yaw = 0.0;
   float target_yaw = 0.0;
+  float yawerror=0;
+  float oldyawerror=0;
+  float integralyaw = 0;
+  float derivativeyaw=0;
 
   QuadClass_LSM6DSOX lsm = QuadClass_LSM6DSOX();
   Adafruit_Simple_AHRS *ahrs = NULL;
@@ -136,7 +140,7 @@ void desiredPos(char key){
       pitch_offset=-cf_pitch;
   }
   if (key == 'o') {
-    yaw_offset=-gyro_raw_yaw;
+    yaw_offset=-gyro_angle_yaw;
   }
 }
 
@@ -198,10 +202,12 @@ if (ahrs->getQuadOrientation(&orientation))
     
     double gyro_angle_pitch = cf_pitch + (gyro_raw_pitch * RAD_TO_DEG)*dt*0.001;
     double gyro_angle_roll = cf_roll + (gyro_raw_roll * RAD_TO_DEG)*dt*0.001;
+
     gyro_angle_yaw = gyro_angle_yaw + (gyro_raw_yaw*RAD_TO_DEG*dt*0.001);
 
     cf_pitch = (gain * gyro_angle_pitch) + (1.0-gain)*pitch;
     cf_roll = (gain * gyro_angle_roll) + (1.0-gain)*roll;
+  
 
 
 /*
@@ -239,17 +245,22 @@ PID();
 
 void PID(){
   pitch_corrected=cf_pitch+pitch_offset;
-  yaw_corrected=gyro_raw_yaw+yaw_offset;
+  yaw_corrected=gyro_angle_yaw+yaw_offset;
 
-  float pitcherror = desiredpitch - pitch_corrected;
-  float yawerror = desiredyaw-yaw_corrected;
+  pitcherror = desiredpitch - pitch_corrected;
+  yawerror = desiredyaw-yaw_corrected;
 
   integralpitch=integralpitch+pitcherror*dt*0.001;
   derivativepitch=(pitcherror-oldpitcherror)/dt;
 
-  pitchcontrol=Kp*pitcherror+Ki*integralpitch+Kd*derivativepitch;
+  integralyaw=integralyaw+yawerror*dt*0.001;
+  derivativeyaw=(yawerror-oldyawerror)/dt;
 
+  pitchcontrol=Kp*pitcherror+Ki*integralpitch+Kd*derivativepitch;
+  yawcontrol=Kp*yawerror+Ki*integralyaw+Kd*derivativeyaw;
+  
   oldpitcherror=pitcherror;
+  oldyawerror=yawerror;
   motorcontrol();
 }
 
