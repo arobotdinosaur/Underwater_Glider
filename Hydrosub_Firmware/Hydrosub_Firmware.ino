@@ -56,10 +56,10 @@ Servo thrusterTopRight;
   float pitchcontrol=0;
   float yawcontrol=0;
   float Kp=0.2;
-  float Ki=0.02;
+  float Ki=0.0;
   float Kd=0.02;
   float Yp=0.1;
-  float Yi=0.01;
+  float Yi=0.0;
   float Yd=0.02;
   
   float dt=0.0;
