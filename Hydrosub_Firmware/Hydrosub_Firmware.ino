@@ -150,6 +150,8 @@ void desiredPos(char key){
 
 void setup() {
 Serial.begin(9600);
+Serial.println("Im alive");
+Serial.println(254);
 pinMode(LED_BUILTIN, OUTPUT);
 
 setupSensor();
@@ -213,7 +215,7 @@ if (ahrs->getQuadOrientation(&orientation))
   
 
 
-/*
+
     Serial.print("cf_pitch:");
     Serial.println(cf_pitch);
 
@@ -222,7 +224,7 @@ if (ahrs->getQuadOrientation(&orientation))
 
     Serial.print("gyro_angle_yaw:");
     Serial.println(gyro_angle_yaw);
-*/
+
   }
 /*
  if(cf_roll>50)

@@ -15,7 +15,7 @@ def get_char():
     return ch
 
 try:
-    arduino = serial.Serial('/dev/cu.usbserial-110', 9600)
+    arduino = serial.Serial('/dev/tty.PL2303G-USBtoUART110', 9600)
     time.sleep(2)  # Wait for serial connection to stabilize
 except serial.SerialException as e:
     print(f"Error opening serial port: {e}")
